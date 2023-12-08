@@ -70,14 +70,36 @@ pub async fn parse(from_chain_id: u64, to_chain_id: u64) -> Result<(), Box<dyn s
         .with_signer(to_signer);
 
     let from_client = Arc::new(from_provider_ws);
+    let to_client = Arc::new(to_provider_ws);
 
-    let inbox_contract_address = Address::from_str(inbox_contract)?;
+    let outbox_contract_address = Address::from_str(outbox_contract)?;
 
     let event = Contract::event_of_type::<SentMessageFilter>(Arc::clone(&from_client))
-        .address(ValueOrArray::Array(vec![inbox_contract_address]));
+        .address(ValueOrArray::Array(vec![outbox_contract_address]));
 
     let mut stream = event.subscribe_with_meta().await?;
 
-    while let Some(Ok((event, meta))) = stream.next().await {}
+    let inbox_contract_address = Address::from_str(inbox_contract)?;
+    let inbox = Arc::new(bindings::inbox::Inbox::new(
+        inbox_contract_address,
+        Arc::clone(&to_client),
+    ));
+
+    while let Some(Ok((event, _))) = stream.next().await {
+        let source_chain_id = event.from_chain_id;
+        let source_message_id = event.message_id;
+        let from = event.from;
+        let to = event.to;
+        let data = event.data;
+
+        inbox
+            .receive_message(source_message_id, source_chain_id, from, to, data)
+            .send()
+            .await
+            .unwrap()
+            .await
+            .unwrap();
+    }
+
     Ok(())
 }
