@@ -116,6 +116,11 @@ pub async fn parse(from_chain_id: u64, to_chain_id: u64) -> Result<(), Box<dyn s
         let to = event.to;
         let data = event.data;
 
+        println!(
+            "Received event on chainid {} with message id {}",
+            source_chain_id, source_message_id
+        );
+
         inbox
             .receive_message(source_message_id, source_chain_id, from, to, data)
             .send()
