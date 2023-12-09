@@ -1,0 +1,22 @@
+{
+  "caddy": {
+    "url": "",
+    "caddyfile": ""
+  },
+  "volume": "/app/mount",
+  "params": {
+    "arch": "arm64"
+  },
+  "service_commands": [
+    {
+      "name": "relayer",
+      "command": "ls -alh /app && /app/decimal_enclave",
+      "build_commands": [
+        "mv /app/mount/decimal_enclave /app/decimal_enclave",
+        "chmod +x /app/decimal_enclave"
+      ],
+      "ports": [],
+      "env": {}
+    }
+  ]
+}
