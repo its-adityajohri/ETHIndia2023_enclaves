@@ -8,6 +8,10 @@ lazy_static! {
     static ref CHAIN_HASHMAP: HashMap<u64, &'static str> = {
         let mut m = HashMap::new();
         m.insert(44787, "wss://alfajores-forno.celo-testnet.org/ws");
+        m.insert(
+            11155111,
+            "wss://eth-sepolia.g.alchemy.com/v2/RMhzE5IvsGlGyO3kuREyJEugrSOeHsB2",
+        );
         m
     };
 }
@@ -16,6 +20,7 @@ lazy_static! {
     static ref INBOX_CONTRACT: HashMap<u64, &'static str> = {
         let mut m = HashMap::new();
         m.insert(44787, "0x42ACd5984Ef828154E478da4Ca1e6f1dd2b7ebd0");
+        m.insert(11155111, "0x42ACd5984Ef828154E478da4Ca1e6f1dd2b7ebd0");
         m
     };
 }
@@ -24,6 +29,7 @@ lazy_static! {
     static ref OUTBOX_CONTRACT: HashMap<u64, &'static str> = {
         let mut m = HashMap::new();
         m.insert(44787, "0x4C3Eae65dCAdA64979691a72cfB42cF67bd9BD3C");
+        m.insert(11155111, "0x4C3Eae65dCAdA64979691a72cfB42cF67bd9BD3C");
         m
     };
 }
@@ -31,7 +37,8 @@ lazy_static! {
 lazy_static! {
     static ref TOKEN_BRIDGE: HashMap<u64, &'static str> = {
         let mut m = HashMap::new();
-        m.insert(1, "0x784C5cf507E7F40D22d3BC66cD7435C83667F0a1");
+        m.insert(44787, "0x4C3Eae65dCAdA64979691a72cfB42cF67bd9BD3C");
+        m.insert(11155111, "0x4C3Eae65dCAdA64979691a72cfB42cF67bd9BD3C");
         m
     };
 }
@@ -52,6 +59,7 @@ pub async fn parse(from_chain_id: u64, to_chain_id: u64) -> Result<(), Box<dyn s
         .ok_or_else(|| "To chain ID not found in the hashmap")?;
 
     // Example operation: print the RPC URLs
+
     println!("From WSS URL: {}", from_wss);
     println!("To WSS URL: {}", to_wss);
 
