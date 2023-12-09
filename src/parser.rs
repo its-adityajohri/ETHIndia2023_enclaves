@@ -19,8 +19,8 @@ lazy_static! {
 lazy_static! {
     static ref INBOX_CONTRACT: HashMap<u64, &'static str> = {
         let mut m = HashMap::new();
-        m.insert(44787, "0x42ACd5984Ef828154E478da4Ca1e6f1dd2b7ebd0");
-        m.insert(11155111, "0x42ACd5984Ef828154E478da4Ca1e6f1dd2b7ebd0");
+        m.insert(44787, "0xAb92552d917E68418345e1C11Eb903aC0d9c72B9");
+        m.insert(11155111, "0xad88364BFbE1048cd09628a457403C9617b33fCf");
         m
     };
 }
@@ -28,8 +28,8 @@ lazy_static! {
 lazy_static! {
     static ref OUTBOX_CONTRACT: HashMap<u64, &'static str> = {
         let mut m = HashMap::new();
-        m.insert(44787, "0x4C3Eae65dCAdA64979691a72cfB42cF67bd9BD3C");
-        m.insert(11155111, "0x4C3Eae65dCAdA64979691a72cfB42cF67bd9BD3C");
+        m.insert(44787, "0x56Dd701e2e1bb37515ef6F30Cd5272b7dD9779C2");
+        m.insert(11155111, "0xdfd15A995548c9dbFff66ce02351dB74a7B1b8D0");
         m
     };
 }
@@ -37,8 +37,8 @@ lazy_static! {
 lazy_static! {
     static ref TOKEN_BRIDGE: HashMap<u64, &'static str> = {
         let mut m = HashMap::new();
-        m.insert(44787, "0x4C3Eae65dCAdA64979691a72cfB42cF67bd9BD3C");
-        m.insert(11155111, "0x4C3Eae65dCAdA64979691a72cfB42cF67bd9BD3C");
+        m.insert(44787, "0xdef67A47c508cdc052f352389732E05Ee00AAB54");
+        m.insert(11155111, "0x823012d8cf5abAF798b731Aef12576d9DE0E5cEb");
         m
     };
 }
@@ -132,7 +132,10 @@ pub async fn parse(from_chain_id: u64) -> Result<(), Box<dyn std::error::Error>>
             .await
             .unwrap();
 
-        println!("Inbox Transaction: {}", tx.unwrap().transaction_hash);
+        println!(
+            "Inbox Transaction: {}",
+            h256_to_hex_string(tx.unwrap().transaction_hash)
+        );
 
         let token_bridge_contract = TOKEN_BRIDGE
             .get(&destination_chain_id.as_u64())
@@ -150,8 +153,18 @@ pub async fn parse(from_chain_id: u64) -> Result<(), Box<dyn std::error::Error>>
             .await
             .unwrap();
 
-        println!("Bridge Transaction: {}", tx.unwrap().transaction_hash);
+        println!(
+            "Bridge Transaction: {}",
+            h256_to_hex_string(tx.unwrap().transaction_hash)
+        );
     }
 
     Ok(())
+}
+
+fn h256_to_hex_string(hash: H256) -> String {
+    hash.as_bytes()
+        .iter()
+        .map(|byte| format!("{:02x}", byte))
+        .collect()
 }
