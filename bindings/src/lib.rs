@@ -12,6 +12,7 @@ pub mod ierc165;
 pub mod ierc20;
 pub mod ierc20_metadata;
 pub mod inbox;
+pub mod kyc_wallet;
 pub mod math;
 pub mod my_token;
 pub mod outbox;

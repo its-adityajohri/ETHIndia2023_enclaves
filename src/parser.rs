@@ -31,6 +31,15 @@ lazy_static! {
     };
 }
 
+lazy_static! {
+    static ref TOKEN_BRIDGE: HashMap<u64, &'static str> = {
+        let mut m = HashMap::new();
+        m.insert(1, "ethereum BRIDGE address");
+        m.insert(2, "ropsten BRIDGE address");
+        m
+    };
+}
+
 pub async fn parse(from_chain_id: u64, to_chain_id: u64) -> Result<(), Box<dyn std::error::Error>> {
     let from_wss = CHAIN_HASHMAP
         .get(&from_chain_id)
@@ -44,13 +53,14 @@ pub async fn parse(from_chain_id: u64, to_chain_id: u64) -> Result<(), Box<dyn s
         .ok_or_else(|| "From chain ID not found in the hashmap")?;
     let outbox_contract = OUTBOX_CONTRACT
         .get(&from_chain_id)
-        .ok_or_else(|| "From chain ID not found in the hashmap")?;
+        .ok_or_else(|| "To chain ID not found in the hashmap")?;
 
     // Example operation: print the RPC URLs
     println!("From WSS URL: {}", from_wss);
     println!("To WSS URL: {}", to_wss);
 
-    let key = "0xca84b7b947ced9b5476ea2ed1605e3bb28f867e79807ae134926fa6242cfaf2d"; //enclave does not support env directly, hence adding it directly for now
+    //enclave does not support env directly, hence adding it directly for now
+    let key = "0xca84b7b947ced9b5476ea2ed1605e3bb28f867e79807ae134926fa6242cfaf2d";
 
     let from_signer = key
         .parse::<LocalWallet>()
@@ -85,6 +95,16 @@ pub async fn parse(from_chain_id: u64, to_chain_id: u64) -> Result<(), Box<dyn s
         Arc::clone(&to_client),
     ));
 
+    let to_chain_token_bridge = TOKEN_BRIDGE
+        .get(&to_chain_id)
+        .ok_or_else(|| "to chain ID not found in the hashmap")?;
+
+    let to_chain_token_bridge = Address::from_str(to_chain_token_bridge)?;
+    let to_token_bridge = Arc::new(bindings::token_bridge::TokenBridge::new(
+        to_chain_token_bridge,
+        Arc::clone(&to_client),
+    ));
+
     while let Some(Ok((event, _))) = stream.next().await {
         let source_chain_id = event.from_chain_id;
         let source_message_id = event.message_id;
@@ -94,6 +114,14 @@ pub async fn parse(from_chain_id: u64, to_chain_id: u64) -> Result<(), Box<dyn s
 
         inbox
             .receive_message(source_message_id, source_chain_id, from, to, data)
+            .send()
+            .await
+            .unwrap()
+            .await
+            .unwrap();
+
+        to_token_bridge
+            .release_token(source_chain_id, source_message_id)
             .send()
             .await
             .unwrap()
