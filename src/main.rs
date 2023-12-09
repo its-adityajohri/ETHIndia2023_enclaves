@@ -11,8 +11,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let _ = parser::parse(11155111).await;
     });
 
+    let parser_handle_3 = task::spawn(async {
+        let _ = parser::parse(421614).await;
+    });
+
     parser_handle_1.await?;
     parser_handle_2.await?;
+    parser_handle_3.await?;
 
     Ok(())
 }

@@ -12,6 +12,10 @@ lazy_static! {
             11155111,
             "wss://eth-sepolia.g.alchemy.com/v2/RMhzE5IvsGlGyO3kuREyJEugrSOeHsB2",
         );
+        m.insert(
+            421614,
+            "wss://arb-sepolia.g.alchemy.com/v2/I2x_yDPSdSBitiOoSIMoNdEROlMgmR6c",
+        );
         m
     };
 }
@@ -21,6 +25,7 @@ lazy_static! {
         let mut m = HashMap::new();
         m.insert(44787, "0xAb92552d917E68418345e1C11Eb903aC0d9c72B9");
         m.insert(11155111, "0xad88364BFbE1048cd09628a457403C9617b33fCf");
+        m.insert(421614, "0x42ACd5984Ef828154E478da4Ca1e6f1dd2b7ebd0");
         m
     };
 }
@@ -30,6 +35,7 @@ lazy_static! {
         let mut m = HashMap::new();
         m.insert(44787, "0x56Dd701e2e1bb37515ef6F30Cd5272b7dD9779C2");
         m.insert(11155111, "0xdfd15A995548c9dbFff66ce02351dB74a7B1b8D0");
+        m.insert(421614, "0x4C3Eae65dCAdA64979691a72cfB42cF67bd9BD3C");
         m
     };
 }
@@ -39,6 +45,7 @@ lazy_static! {
         let mut m = HashMap::new();
         m.insert(44787, "0xdef67A47c508cdc052f352389732E05Ee00AAB54");
         m.insert(11155111, "0x823012d8cf5abAF798b731Aef12576d9DE0E5cEb");
+        m.insert(421614, "0x784C5cf507E7F40D22d3BC66cD7435C83667F0a1");
         m
     };
 }
