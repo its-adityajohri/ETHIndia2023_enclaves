@@ -7,8 +7,7 @@ use std::{str::FromStr, sync::Arc};
 lazy_static! {
     static ref CHAIN_HASHMAP: HashMap<u64, &'static str> = {
         let mut m = HashMap::new();
-        m.insert(1, "ethereum wss url");
-        m.insert(2, "ropsten wss url");
+        m.insert(44787, "wss://alfajores-forno.celo-testnet.org/ws");
         m
     };
 }
@@ -16,8 +15,7 @@ lazy_static! {
 lazy_static! {
     static ref INBOX_CONTRACT: HashMap<u64, &'static str> = {
         let mut m = HashMap::new();
-        m.insert(1, "ethereum inbox address");
-        m.insert(2, "ropsten inbox address");
+        m.insert(44787, "0x42ACd5984Ef828154E478da4Ca1e6f1dd2b7ebd0");
         m
     };
 }
@@ -25,8 +23,7 @@ lazy_static! {
 lazy_static! {
     static ref OUTBOX_CONTRACT: HashMap<u64, &'static str> = {
         let mut m = HashMap::new();
-        m.insert(1, "ethereum OUTBOX address");
-        m.insert(2, "ropsten OUTBOX address");
+        m.insert(44787, "0x4C3Eae65dCAdA64979691a72cfB42cF67bd9BD3C");
         m
     };
 }
@@ -34,8 +31,7 @@ lazy_static! {
 lazy_static! {
     static ref TOKEN_BRIDGE: HashMap<u64, &'static str> = {
         let mut m = HashMap::new();
-        m.insert(1, "ethereum BRIDGE address");
-        m.insert(2, "ropsten BRIDGE address");
+        m.insert(1, "0x784C5cf507E7F40D22d3BC66cD7435C83667F0a1");
         m
     };
 }
