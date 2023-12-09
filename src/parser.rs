@@ -43,48 +43,32 @@ lazy_static! {
     };
 }
 
-pub async fn parse(from_chain_id: u64, to_chain_id: u64) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn parse(from_chain_id: u64) -> Result<(), Box<dyn std::error::Error>> {
     let from_wss = CHAIN_HASHMAP
         .get(&from_chain_id)
         .ok_or_else(|| "From chain ID not found in the hashmap")?;
-    let to_wss = CHAIN_HASHMAP
-        .get(&to_chain_id)
-        .ok_or_else(|| "To chain ID not found in the hashmap")?;
 
-    let inbox_contract = INBOX_CONTRACT
-        .get(&from_chain_id)
-        .ok_or_else(|| "From chain ID not found in the hashmap")?;
     let outbox_contract = OUTBOX_CONTRACT
         .get(&from_chain_id)
-        .ok_or_else(|| "To chain ID not found in the hashmap")?;
+        .ok_or_else(|| "From chain ID not found in the hashmap")?;
 
     // Example operation: print the RPC URLs
 
     println!("From WSS URL: {}", from_wss);
-    println!("To WSS URL: {}", to_wss);
 
     //enclave does not support env directly, hence adding it directly for now
-    let key = "0xca84b7b947ced9b5476ea2ed1605e3bb28f867e79807ae134926fa6242cfaf2d";
+    let key = "0xca65f4b51f9bce13a20e8de77c7108613b6151ed4b466a38969f1575fb361033";
 
     let from_signer = key
         .parse::<LocalWallet>()
         .unwrap()
         .with_chain_id(from_chain_id);
-    let to_signer = key
-        .parse::<LocalWallet>()
-        .unwrap()
-        .with_chain_id(to_chain_id);
 
     let from_provider_ws = Provider::<Ws>::connect_with_reconnects(&from_wss, 2)
         .await?
         .with_signer(from_signer);
 
-    let to_provider_ws = Provider::<Ws>::connect_with_reconnects(&to_wss, 2)
-        .await?
-        .with_signer(to_signer);
-
     let from_client = Arc::new(from_provider_ws);
-    let to_client = Arc::new(to_provider_ws);
 
     let outbox_contract_address = Address::from_str(outbox_contract)?;
 
@@ -93,35 +77,54 @@ pub async fn parse(from_chain_id: u64, to_chain_id: u64) -> Result<(), Box<dyn s
 
     let mut stream = event.subscribe_with_meta().await?;
 
-    let inbox_contract_address = Address::from_str(inbox_contract)?;
-    let inbox = Arc::new(bindings::inbox::Inbox::new(
-        inbox_contract_address,
-        Arc::clone(&to_client),
-    ));
-
-    let to_chain_token_bridge = TOKEN_BRIDGE
-        .get(&to_chain_id)
-        .ok_or_else(|| "to chain ID not found in the hashmap")?;
-
-    let to_chain_token_bridge = Address::from_str(to_chain_token_bridge)?;
-    let to_token_bridge = Arc::new(bindings::token_bridge::TokenBridge::new(
-        to_chain_token_bridge,
-        Arc::clone(&to_client),
-    ));
-
     while let Some(Ok((event, _))) = stream.next().await {
         let source_chain_id = event.from_chain_id;
         let source_message_id = event.message_id;
+        let destination_chain_id = event.to_chain_id;
         let from = event.from;
         let to = event.to;
         let data = event.data;
 
         println!(
-            "Received event on chainid {} with message id {}",
-            source_chain_id, source_message_id
+            "Received event from chainid {} with message id {}, to chain id {}",
+            source_chain_id, source_message_id, destination_chain_id
         );
 
-        inbox
+        let to_wss = CHAIN_HASHMAP
+            .get(&destination_chain_id.as_u64())
+            .ok_or_else(|| "From chain ID not found in the hashmap")?;
+
+        let inbox_contract = INBOX_CONTRACT
+            .get(&destination_chain_id.as_u64())
+            .ok_or_else(|| "To chain ID not found in the hashmap")?;
+
+        let to_signer = key
+            .parse::<LocalWallet>()
+            .unwrap()
+            .with_chain_id(destination_chain_id.as_u64());
+
+        let to_provider_ws = Provider::<Ws>::connect_with_reconnects(&to_wss, 2)
+            .await?
+            .with_signer(to_signer.clone());
+
+        let to_client = Arc::new(to_provider_ws);
+
+        let inbox_contract_address = Address::from_str(inbox_contract)?;
+
+        let inbox = Arc::new(bindings::inbox::Inbox::new(
+            inbox_contract_address,
+            Arc::clone(&to_client),
+        ));
+
+        // dbg!(to_signer.address());
+        // let balance_of_signer = to_client
+        //     .get_balance(to_signer.address(), None)
+        //     .await
+        //     .unwrap();
+
+        // dbg!(balance_of_signer);
+
+        let tx = inbox
             .receive_message(source_message_id, source_chain_id, from, to, data)
             .send()
             .await
@@ -129,13 +132,25 @@ pub async fn parse(from_chain_id: u64, to_chain_id: u64) -> Result<(), Box<dyn s
             .await
             .unwrap();
 
-        to_token_bridge
+        println!("Inbox Transaction: {}", tx.unwrap().transaction_hash);
+
+        let token_bridge_contract = TOKEN_BRIDGE
+            .get(&destination_chain_id.as_u64())
+            .ok_or_else(|| "To chain ID not found in the hashmap")?;
+
+        let token_bridge_contract = Address::from_str(token_bridge_contract)?;
+
+        let to_token_bridge =
+            bindings::token_bridge::TokenBridge::new(token_bridge_contract, Arc::clone(&to_client));
+        let tx = to_token_bridge
             .release_token(source_chain_id, source_message_id)
             .send()
             .await
             .unwrap()
             .await
             .unwrap();
+
+        println!("Bridge Transaction: {}", tx.unwrap().transaction_hash);
     }
 
     Ok(())
